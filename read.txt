@@ -1,0 +1,22 @@
+check is the market has swipt or close above the 4h high or low 
+find and check if the market has close heigh or low , the last oposite candle 
+set sl and tp 
+
+
+1. make request after 4h and store 4h high and low 
+2. if another 4h candle has form then update the value 
+3. make null of 5min values 
+
+
+1. check is  the 5 minutes candle swipe or close the candle . store the high and low of the value 
+2. find the last oposite candle which is not inside candle and store the value 
+3. if new high and low create then update the value 
+4. if the new high and low updated then again find the last oppsite candle.
+
+
+
+
+entry conditions 
+1. if the 4h candle is over then the trade is not open 
+2. the any runing trade 
+3. the one trade has done in the range 

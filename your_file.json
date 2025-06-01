@@ -1,0 +1,9 @@
+{
+    "isCrossed": false,
+    "side": "",
+    "high": "0",
+    "low": "999999",
+    "lastBuyCandle": "",
+    "lastSellCandle": "",
+    "tradeTaken": false
+}
