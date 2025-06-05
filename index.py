@@ -1,84 +1,83 @@
-from tvDatafeed import TvDatafeed, Interval
+# from tvDatafeed import TvDatafeed, Interval
+# from fivemintime import get_5min_candle_count
 
-from fivemintime import get_5min_candle_count
-from fivemintime import get_5min_candle_count
 from read_json import readjson
 from update_json import update_json
-# Interval.in_5_minute
+from functions.callApi import call_api
+import pandas as pd  # Added for DataFrame usage
 
-# Interval.in_4_hour
+# Fetch market data from API
+data = call_api(url="https://bot-flas-server.onrender.com/market-data", method="GET")
 
+# Convert h4 and m5 data to pandas DataFrames
+h4_data = pd.DataFrame(data["h4"])
+m5_data = pd.DataFrame(data["m5"])
 
-# username = 'shahinsamiur647'
-# password = 'SrS.shahin1710@@'
+print(h4_data)
 
-# tv = TvDatafeed(username, password)
-tv = TvDatafeed()
-
-# index
-# fiveminCandleSIze=get_5min_candle_count()
-h4_data = tv.get_hist(symbol='EURUSD',exchange='OANDA',interval=Interval.in_4_hour,n_bars=3)
-m5_data = tv.get_hist(symbol='EURUSD',exchange='OANDA',interval=Interval.in_5_minute,n_bars=80)
-print("This is the length ",len(m5_data))
+# Initialize values if not already set in the JSON
 jsons = readjson()
-if(jsons["high"]==""):
-    update_json({"high": h4_data["high"].iloc[0]})
-if(jsons["low"]==""):
-    update_json({"low": h4_data["low"].iloc[0]})
+if jsons["high"] == "":
+    update_json({"high": h4_data.iloc[0]["high"]})
+if jsons["low"] == "":
+    update_json({"low": h4_data.iloc[0]["low"]})
 
+print(h4_data.iloc[0]["low"])
 
-print(h4_data["low"].iloc[0])
+# Loop through m5 candles
 for i in range(1, len(m5_data)):  # Start from 1 to avoid negative index
     row = m5_data.iloc[i]
     prev_row = m5_data.iloc[i - 1]
     json = readjson()
 
-
+    # Check for trade trigger condition
     if (
         json.get("sessionEligibleForOpenTrade", False)
         and json.get("lastOppositeCandle", "") != ""
         and json["isCrossed"]
-    ): 
-        print("lets check for trade ") 
-        if json["side"] == "buy" and json["lastOppositeCandle"] < row['close']:
-            
+    ):
+        print("lets check for trade")
+        if json["side"] == "buy" and json["lastOppositeCandle"] < row["close"]:
+            update_json({"sessionEligibleForOpenTrade": False})
+        elif json["side"] == "sell" and json["lastOppositeCandle"] > row["close"]:
             update_json({"sessionEligibleForOpenTrade": False})
 
-        elif json["side"] == "sell" and json["lastOppositeCandle"] > row['close']:
-            # print("SELL NOW", m5_data.iloc[i].name)
-            update_json({"sessionEligibleForOpenTrade": False})
-
-
-    if row['open'] < row['close']: # for sell setup means if the upside swipe
-
-        if (json["isCrossed"]==False and h4_data["high"].iloc[0] <row['high']) or (json["isCrossed"]==True and json["high"]<row['high']):
+    # Detect sell setup (bullish candle)
+    if row["open"] < row["close"]:
+        if (not json["isCrossed"] and h4_data.iloc[0]["high"] < row["high"]) or (
+            json["isCrossed"] and json["high"] < row["high"]
+        ):
             for j in range(i, 1, -1):
-                    
-                    if m5_data.iloc[j]['open'] > m5_data.iloc[j]['close'] and (m5_data.iloc[j-1]['high'] < m5_data.iloc[j]['high'] or m5_data.iloc[j-1]['low'] > m5_data.iloc[j]['low']):
-                      update_json({"lastOppositeCandle": m5_data.iloc[j]['close']})
-                      
-                      break
+                if (
+                    m5_data.iloc[j]["open"] > m5_data.iloc[j]["close"]
+                    and (
+                        m5_data.iloc[j - 1]["high"] < m5_data.iloc[j]["high"]
+                        or m5_data.iloc[j - 1]["low"] > m5_data.iloc[j]["low"]
+                    )
+                ):
+                    update_json({"lastOppositeCandle": m5_data.iloc[j]["close"]})
+                    break
 
-
-
-            update_json({"high": row['high']})
+            update_json({"high": row["high"]})
             if not json["isCrossed"]:
-                
-                update_json({"isCrossed": True,"side":"sell"})
+                update_json({"isCrossed": True, "side": "sell"})
 
+    # Detect buy setup (bearish candle)
+    if row["open"] > row["close"]:
+        if (not json["isCrossed"] and h4_data.iloc[0]["low"] > row["low"]) or (
+            json["isCrossed"] and json["low"] > row["low"]
+        ):
+            for j in range(i, 1, -1):
+                if (
+                    m5_data.iloc[j]["open"] < m5_data.iloc[j]["close"]
+                    and (
+                        m5_data.iloc[j - 1]["high"] < m5_data.iloc[j]["high"]
+                        or m5_data.iloc[j - 1]["low"] > m5_data.iloc[j]["low"]
+                    )
+                ):
+                    update_json({"lastOppositeCandle": m5_data.iloc[j]["close"]})
+                    break
 
-    if row['open'] > row['close']: # for Buy setup means if the Downside swipe
-        
-        if (json["isCrossed"]==False and h4_data["low"].iloc[0] >row['low']) or (json["isCrossed"]==True and json["low"]>row['low']):
-            for j in range(i, 1, -1): # finding last opposite candle here bearish candle
-                    
-                    if m5_data.iloc[j]['open'] < m5_data.iloc[j]['close'] and (m5_data.iloc[j-1]['high'] < m5_data.iloc[j]['high'] or m5_data.iloc[j-1]['low'] > m5_data.iloc[j]['low']):
-                      update_json({"lastOppositeCandle": m5_data.iloc[j]['close']})
-                    #   print(row['close'],m5_data.iloc[j].name)
-                      break
-
-
-
-            update_json({"low": row['low']})
+            update_json({"low": row["low"]})
             if not json["isCrossed"]:
-                update_json({"isCrossed": True,"side":"buy"})
+                update_json({"isCrossed": True, "side": "buy"})
