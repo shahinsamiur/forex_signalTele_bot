@@ -15,6 +15,5 @@ payload = {
 try:
     response = requests.post(url, json=payload)
     response.raise_for_status()
-    print('Message sent:', response.json())
 except requests.exceptions.RequestException as e:
     print('Error sending message:', e)

@@ -1,8 +1,8 @@
 {
-    "isCrossed": true,
-    "side": "sell",
-    "high": 1.14951,
-    "low": 1.14096,
-    "lastOppositeCandle": 1.14236,
+    "isCrossed": false,
+    "side": "",
+    "high": "",
+    "low": "",
+    "lastOppositeCandle": "",
     "sessionEligibleForOpenTrade": true
 }
