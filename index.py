@@ -13,11 +13,7 @@ h4_data_list, m5_data_list, jsons = response["h4"], response["m5"], response["da
 h4_data = pd.DataFrame(h4_data_list)
 m5_data = pd.DataFrame(m5_data_list)
 
-messageData = {'text': "Sell>>>>>>>sl--"}
-call_api(url=SENDMESSAGE_URL, method="POST", payload=messageData)
 
-messageData = {'text': "BUY>>>>>>>sl--" + str(jsons.get("high")),}
-call_api(url=SENDMESSAGE_URL, method="POST", payload=messageData)
 
 # Initialize high and low if empty
 if jsons.get("high", "") == "":
